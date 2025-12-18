@@ -1,0 +1,56 @@
+# Playbook Information
+#  - This playbook installs and starts MY-SQL on a Linux Server
+
+- name: add remote server SSH fingerprint to known host file
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars_mysql_database_setup.yml
+
+  tasks:
+    - name: add remote host fingerprint to known hosts
+      ansible.builtin.known_hosts:
+        name: "{{ linux_serverip }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + linux_serverip) }}"
+
+
+- name: Setup MS-SQL Server
+  hosts: "{{ new_hostname  }}"
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars_mysql_database_setup.yml
+    - ../secrets.yml
+
+  tasks:
+    - name:  change hostname
+      ansible.builtin.hostname:
+        name: "{{ new_hostname }}"
+
+    - name: edit /etc/hosts file
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127.0.1.1'
+        line: "127.0.1.1 {{ new_hostname }}"
+
+    - name: install mysql
+      ansible.builtin.package:
+        name:
+          - mysql-server
+          - python3-pymysql
+        state: present
+
+    - name: start mysql service
+      ansible.builtin.service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: add password to the root mysql user
+      community.mysql.mysql_user:
+        name: root
+        login_user: root
+        login_password: Password1!
+        host: localhost
+        password: '{{ mysql_root_password }}'
+        login_unix_socket: /run/mysqld/mysqld.sock

@@ -1,0 +1,33 @@
+winservers:
+  hosts:
+    winserver1:
+      ansible_host: 192.168.1.10
+      ansible_user: "{{ winserver1_user }}"
+      ansible_ssh_pass: "{{ winserver1_ssh_pass }}"
+  vars:
+    ansible_connection: ssh
+    ansible_shell_type: powershell
+
+winhosts:
+  hosts:
+    winhost1:
+      ansible_host: 192.168.1.11
+      ansible_user: "{{ winhost1_user }}"
+      ansible_ssh_pass: "{{ winhost1_ssh_pass }}"
+  vars:
+    ansible_connection: ssh
+    ansible_shell_type: powershell
+
+linuxservers:
+  hosts:
+    linuxserver1:
+      ansible_host: 192.168.1.20
+      ansible_user: "{{ linuxserver1_user }}"
+      ansible_password: "{{ linuxserver1_password }}"
+
+linuxhosts:
+  hosts:
+    linuxhost1:
+      ansible_host: 192.168.1.21
+      ansible_user: "{{ linuxhost1_user }}"
+      ansible_password: "{{ linuxhost1_password }}"

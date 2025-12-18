@@ -1,0 +1,15 @@
+# Variables file for the 'add_ftp_user.yml' playbook
+
+# Name of server creating the mailserver on (ensure this matches the name in the inventory.yml file)
+linux_server: mailserver
+# SU password
+ansible_become_password: examplepassword
+# New User
+mail_user: tom
+# New user password
+user_password: examplepassword
+
+# Client accessing the mail server
+linux_client: "user1\\controlnode"
+# Mail name
+mail_name: dbusch.com

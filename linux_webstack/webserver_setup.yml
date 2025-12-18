@@ -1,0 +1,56 @@
+# Playbook Information
+#  - This playbook creates a Web Server on a Linux Server ready for PHP applications
+
+- name: add remote server SSH fingerprint to known host file
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars_webserver_setup.yml
+
+  tasks:
+    - name: add remote host fingerprint to known hosts
+      ansible.builtin.known_hosts:
+        name: "{{ linux_serverip }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + linux_serverip) }}"
+
+- name: Setup Web Server
+  hosts: "{{ new_hostname  }}"
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars_webserver_setup.yml
+    - ../secrets.yml
+
+  tasks:
+    - name:  change hostname
+      ansible.builtin.hostname:
+        name: "{{ new_hostname }}"
+
+    - name: edit /etc/hosts file
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127.0.1.1'
+        line: "127.0.1.1       {{ new_hostname }}"
+
+    - name: install apache
+      ansible.builtin.package:
+        name:
+          - apache2
+        state: present
+
+    - name: install php packages
+      ansible.builtin.package:
+        name:
+          - php
+          - libapache2-mod-php
+          - php-mysql
+          - php-xml
+          - php-curl
+        state: present
+
+    - name: get service facts
+      ansible.builtin.service_facts:
+
+    - name: verify apache is running
+      ansible.builtin.debug:
+        var: ansible_facts.services['apache2.service']['state']

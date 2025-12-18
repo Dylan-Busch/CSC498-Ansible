@@ -1,0 +1,38 @@
+# Playbook Information
+#  - This playbook sets up a Kali host 
+
+# Prior to running this playbook
+#  -setup IP address on the host
+#  -input data specific to host var_kali_setup.yml file
+
+- name: Kali Host Setup
+  hosts: "{{ hostname }}"
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars_kali_setup.yml
+    - ../secrets.yml
+
+  tasks:
+
+    - name:  change hostname
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+
+    - name: edit /etc/hosts file
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127.0.1.1'
+        line: "127.0.1.1       {{ hostname }}"
+
+    - name: setup remaining ip information
+      community.general.nmcli:
+        state: present
+        conn_name: Wired connection 1
+        type: ethernet
+        dns4:
+          - "{{ dns_server }}"
+
+    - name: gunzip /usr/share/wordlists/rockyou.txt.gz
+      ansible.builtin.command: gunzip /usr/share/wordlists/rockyou.txt.gz
+

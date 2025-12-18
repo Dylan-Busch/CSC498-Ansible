@@ -1,0 +1,51 @@
+# Playbook Information
+#  - This playbook changes a windows host's hostname, changes DNS server to the domain controller of an active directory,
+#    joins the host to the domain, and creates a user on the domain
+
+- name: Windows Host Domain Join
+  hosts: "{{ hostname }}"
+  gather_facts: no
+  vars_files:
+    - vars_win_domain_join.yml
+    - ../secrets.yml
+
+  tasks:
+
+    - name:  change hostname
+      ansible.windows.win_hostname:
+          name: "{{ hostname }}"
+      register: res
+
+    - name: Reboot
+      ansible.windows.win_reboot:
+      when: res.reboot_required
+
+    - name: Change DNS server
+      ansible.windows.win_dns_client:
+        adapter_names: "*"
+        dns_servers: "{{ dns_ip }}"
+
+    - name: Join host to domain
+      microsoft.ad.membership:
+        dns_domain_name: "{{ domain_to_join }}"
+        hostname: "{{ hostname }}"
+        domain_admin_user: "{{ domain_admin_user }}"
+        domain_admin_password: "{{ domain_admin_password }}"
+        state: domain
+        reboot: true
+
+- name: Create New User in AC
+  hosts: "{{ domain_controller }}"
+  gather_facts: no
+  vars_files:
+    - vars_win_domain_join.yml
+    - ../secrets.yml
+
+  tasks:
+
+    - name: create new user
+      microsoft.ad.user:
+        name: "{{ ad_username }}"
+        password: "{{ ad_password }}"
+        password_never_expires: yes
+        path: "{{ path }}"

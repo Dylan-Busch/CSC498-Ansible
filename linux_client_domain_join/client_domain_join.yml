@@ -1,0 +1,78 @@
+# Playbook Information
+#  - This playbook changes a linux host's hostname, install correct packages to join an active directory domain, 
+#    joins the host to the domain, and creates a user on the domain
+
+- name: Linux Host Domain Join
+  hosts: "{{ hostname }}"
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars_client_domain_join.yml
+    - ../secrets.yml
+
+  tasks:
+
+    - name: copy SSH public key to host
+      ansible.posix.authorized_key:
+        user: "{{ user }}"
+        key:  "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name:  change hostname
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+
+    - name: Install packages for domain join
+      ansible.builtin.package:
+        name:
+          - realmd
+          - sssd
+          - sssd-tools
+          - samba-common
+          - packagekit
+          - adcli
+        state: present
+
+    - name: discover the domain
+      ansible.builtin.command:
+        cmd: realm discover {{ domain_to_join }}
+      register: domain_discover
+
+    - name: join the domain
+      ansible.builtin.command: >
+        realm join --user={{ domain_user }} {{ domain_to_join }}
+      args:
+        stdin: "{{ domain_password }}"
+
+    - name: allow domain users to login
+      ansible.builtin.command: "realm permit -a"
+
+    - name: verify join
+      ansible.builtin.command: "realm list"
+      register: realm_list
+
+    - name: display join
+      ansible.builtin.debug:
+        msg: "{{ realm_list.stdout }}"
+
+    - name: edit pam.d to allow mkhomedir
+      ansible.builtin.lineinfile:
+        path: '/etc/pam.d/common-session'
+        line: 'session required pam_mkhomedir.so skel=/etc/skel unmask=0077'
+        insertafter: EOF
+        create: true
+
+- name: Create New User in AC
+  hosts: "{{ domain_controller }}"
+  gather_facts: no
+  vars_files:
+    - vars_win_domain_join.yml
+    - ../secrets.yml
+
+  tasks:
+
+    - name: create new user
+      microsoft.ad.user:
+        name: "{{ ad_username }}"
+        password: "{{ ad_password }}"
+        password_never_expires: yes
+        path: "{{ path }}"

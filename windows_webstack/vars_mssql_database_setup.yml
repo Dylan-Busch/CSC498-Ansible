@@ -1,0 +1,11 @@
+# Variables for mssql_database_setup.yml
+
+# Step 1
+    # Run PowerShell script 'initial_network_setup.ps1' on the new Windows Server
+# Step 2 
+    # Run PowerShell script 'ssh_ping_setup.ps1' on the new Windows Server
+# Step 3 - copy controlnode public key to the new Windows Server for SSH OR include SSH password in secrets.yml
+    # Run command 'scp ~/.ssh/id_rsa.pub [USER]@[IPADDRESS]:C:\\ProgramData\\ssh\\administrators_authorized_keys' on control node
+
+# Hostname to set for the MS-SQL server
+new_hostname: windataserver #ensure this matches the hostname in the inventory.yml file

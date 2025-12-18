@@ -1,0 +1,47 @@
+# This playbook sets up a Windows server as a domain controller
+
+- name: Setup new domain controller
+  hosts: "{{ new_hostname  }}"
+  gather_facts: no
+  vars_files:
+    - vars_dc_setup.yml
+    - ../secrets.yml
+
+  tasks:
+
+  - name: Change hostname
+    ansible.windows.win_hostname:
+      name: "{{ new_hostname }}"
+    register: res
+
+  - name: Reboot after hostname change
+    ansible.windows.win_reboot:
+      msg: "Rebooting after changing hostname"
+    when: res.reboot_required
+
+  - name: Install AD & DNS
+    ansible.windows.win_feature:
+      name: AD-Domain-Services
+      include_management_tools: true
+
+  - name: Promote server to dc
+    microsoft.ad.domain:
+      dns_domain_name: "{{ domain_name }}"
+      safe_mode_password: "{{ safe_mode_password }}"
+      install_dns: true
+      reboot: true
+
+  - name: wait reboot after dc promotion
+    ansible.builtin.wait_for_connection:
+      delay: 30
+
+  - name: Configure DNS forwarder
+    ansible.windows.win_dns_client:
+      adaptor_names: '*'
+      dns_servers: "{{ dns_forwarder }}"
+
+  - name: Set DNS address to self
+    ansible.windows.win_dns_client:
+      adapter_names: "{{ ethernet_port }}"
+      dns_servers:
+        - "{{ server_ip }}"

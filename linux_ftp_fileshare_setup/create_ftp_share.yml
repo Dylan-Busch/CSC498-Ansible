@@ -1,0 +1,76 @@
+# Playbook Information
+#  - This playbook creates a FTP server
+
+- name: Create FTP Server
+  hosts: "{{ linux_server }}"
+  gather_facts: false
+  become: true
+  vars_files:
+    - ../secrets.yml
+    - vars_ftp_share.yml
+
+  tasks:
+
+    - name: Install vsftpd
+      apt:
+        name:
+          - vsftpd
+          - ufw
+        state: present
+
+    - name: Enable and start vsftpd
+      service:
+        name: vsftpd
+        state: started
+        enabled: yes
+
+    - name: Create firewall rules
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      loop:
+        - { port: '22', proto: 'tcp' }
+        - { port: '21', proto: 'tcp' }
+        - { port: '20', proto: 'tcp' }
+        - { port: '990', proto: 'tcp' }
+        - { port: '40000:50000', proto: 'tcp' }
+
+    - name: Enable ufw
+      ansible.builtin.command: ufw --force enable
+
+    - name: Backup default vsftpd configuration
+      copy:
+        src: /etc/vsftpd.conf
+        dest: /etc/vsftpd.conf.orig
+        remote_src: yes
+
+    - name: Configure vsftpd
+      blockinfile:
+        path: /etc/vsftpd.conf
+        create: yes
+        block: |
+          write_enable=YES
+          chroot_local_user=YES
+          user_sub_token=$USER
+          local_root=/srv/ftp/$USER
+          allow_writeable_chroot=YES
+          pasv_min_port=40000
+          pasv_max_port=50000
+          userlist_enable=YES
+          userlist_file=/etc/vsftpd.userlist
+          userlist_deny=NO
+
+    - name: Create userlist file
+      ansible.builtin.file:
+        path: /etc/vsftpd.userlist
+        state: touch
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Restart vsftpd
+      service:
+        name: vsftpd
+        state: restarted
+

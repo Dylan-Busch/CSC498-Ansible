@@ -1,0 +1,39 @@
+# Playbook Information
+#  - This playbook creates a SMB fileshare directory on a Windows Server domain controller for access within the domain
+
+- name: Create SMB fileshare on Windows Server
+  hosts: "{{ windows_server }}"
+  gather_facts: false
+  vars_files:
+    - ../secrets.yml
+    - vars_smb_share.yml
+
+  tasks:
+
+    - name: Install file server role to active directory
+      ansible.windows.win_feature:
+        name: FS-FileServer
+        state: present
+
+    - name: Create share directory
+      ansible.windows.win_file:
+        path: "{{ share_path }}"
+        state: directory
+
+    - name: Create SMB share
+      ansible.windows.win_share:
+        name: "{{ share }}"
+        path: "{{ share_path }}"
+        list: true
+        full: Administrators
+        change: "{{ change_access }}"
+        read: "{{ read_access }}"
+
+    - name: Get share information
+      ansible.windows.win_shell: |
+        Get-SmbShare -Name "{{ share }}" | Select-Object Name, Path
+      register: share_information
+
+    - name: Print share information
+      ansible.builtin.debug:
+        var: share_information.stdout_lines

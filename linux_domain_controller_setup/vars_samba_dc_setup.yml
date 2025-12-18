@@ -1,0 +1,16 @@
+# Variables file for the 'samba_dc_setup.yml' playbook
+
+# Super User password
+ansible_become_password: examplepassword
+# Hostname of server
+hostname: linuxDC
+# User on server
+user: user1
+# Designated Realm name
+realm: samba.local
+# Designated Domain name
+domain: SAMBA
+
+
+# Do not modify, should be the same on all systems
+pub_key_path: '~/.ssh/id_rsa.pub'

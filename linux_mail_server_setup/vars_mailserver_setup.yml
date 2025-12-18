@@ -1,0 +1,16 @@
+# Variables file for the 'create_ftp_share.yml' playbook
+
+# !!! - Run in combination with the add_mail_user.yml playbook, need to create an
+#       user on the mailserver for each user accessing the mailserver
+
+# Name of server creating the mailserver on (ensure this matches the name in the inventory.yml file)
+linux_server: mailserver
+# IP of the server
+linux_serverip: 192.168.1.222
+# SU password
+ansible_become_password: examplepassword
+# Hostname to rename linux system to
+hostname: mailserver
+# Mail server name
+mail_name: dbusch.com
+

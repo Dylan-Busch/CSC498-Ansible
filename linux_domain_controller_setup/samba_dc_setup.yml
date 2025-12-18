@@ -1,0 +1,88 @@
+# Playbook Information
+#  - This playbook adds the SSH public key to the host, installs samba packages, provisions samba, and sets the dns forwarder to itself
+
+- name: Setup new domain controller
+  hosts: "{{ hostname }}"
+  gather_facts: no
+  become: true
+  become_method: sudo
+  vars_files:
+    - vars_samba_dc_setup.yml
+    - ../secrets.yml
+
+  tasks:
+
+    - name: copy SSH public key to host
+      ansible.posix.authorized_key:
+        user: "{{ user }}"
+        key:  "{{ lookup('file', pub_key_path) }}"
+
+    - name: Install Samba packages
+      apt:
+        name:
+          - samba
+          - krb5-user
+          - dnsutils
+          - winbind
+          - krb5-config
+          - smbclient
+        state: present
+
+    - name: stop samba before provisioning
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      loop:
+        - smbd
+        - nmbd
+        - winbind
+        - samba-ac-dc
+      ignore_errors: yes
+
+    - name: Remove any existing Samba configuration
+      file:
+        path: /etc/samba/smb.conf
+        state: absent
+
+    - name: Provision Samba as AD DC
+      command: >
+        samba-tool domain provision
+        --realm={{ realm }}
+        --domain={{ domain }}
+        --server-role=dc
+        --dns-backend=SAMBA_INTERNAL
+        --adminpass='{{ linuxDC_password }}'
+      args:
+        creates: /var/lib/samba/private/krb5.conf
+
+    - name: Copy Kerberos configuration
+      copy:
+        src: /var/lib/samba/private/krb5.conf
+        dest: /etc/krb5.conf
+        remote_src: yes
+
+    - name: Use self as DNS forwarder
+      lineinfile:
+        path: /etc/resolv.conf
+        regexp: "^nameserver"
+        line: "nameserver 127.0.0.1"
+        create: yes
+
+    - name: Start Samba AD
+      service:
+        name: samba-ac-dc
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart network
+      service:
+        name: networking
+        state: restarted
+
+    - name: restart samba
+      systemd:
+        name: samba
+        state: restarted
+

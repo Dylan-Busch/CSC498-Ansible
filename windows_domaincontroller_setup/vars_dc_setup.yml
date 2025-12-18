@@ -1,0 +1,21 @@
+# Variables for domain_controller_setup.yml
+
+# Step 1
+    # Run PowerShell script 'initial_network_setup.ps1' on the new Windows Server
+# Step 2 
+    # Run PowerShell script 'ssh_ping_setup.ps1' on the new Windows Server
+# Step 3 - copy controlnode public key to the new Windows Server for SSH OR include SSH password in secrets.yml
+    # Run command 'scp ~/.ssh/id_rsa.pub [USER]@[IPADDRESS]:C:\\ProgramData\\ssh\\administrators_authorized_keys' on control node
+
+# Name of server creating the fileshare on (ensure this matches the name in the inventory.yml file)
+new_hostname: 'addedwinserver'
+# Domain name for the domain being created
+domain_name: 'busch.com'
+# Safe mode password
+safe_mode_password: 'examplepassword'
+# IP address for where to forward DNS requests
+dns_forwarder: '192.168.1.1'
+# IP address of the server being turned into a domain controller
+server_ip: '192.168.1.11'
+# default ethernet port
+ethernet_port: 'Ethernet0'

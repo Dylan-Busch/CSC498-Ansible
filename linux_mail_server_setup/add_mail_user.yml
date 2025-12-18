@@ -1,0 +1,34 @@
+# Playbook Information
+#  - This playbook adds a user to the mail server 
+
+- name: Add Mail Server User
+  hosts: "{{ linux_server }}"
+  gather_facts: false
+  become: true
+  vars_files:
+    - ../secrets.yml
+    - vars_add_mail_user.yml
+
+  tasks:
+
+    - name: Create mail user
+      user:
+        name: "{{ mail_user }}"
+        password: "{{ user_password | password_hash('sha512') }}"
+        create_home: yes
+        shell: /bin/bash
+
+- name: add host to remote client
+  hosts: "{{ linux_client }}"
+  gather_facts: false
+  become: true
+  vars_files:
+    - ../secrets.yml
+    - vars_add_mail_user.yml
+
+  tasks:
+
+    - name: add mail server to /etc/hosts
+      lineinfile:
+      path: /etc/hosts
+      line: "{{ linux_serverip }}       {{ mail_name }}"

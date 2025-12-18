@@ -1,0 +1,8 @@
+# Variables file for the 'linux_domain_join.yml' playbook
+
+# Hostname of Kali client
+hostname: kali1
+# Host su password
+ansible_become_password: kali
+# dns server ip
+dns_server: 192.168.1.1

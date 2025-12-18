@@ -1,0 +1,27 @@
+# Variables file for the 'client_domain_join.yml' playbook
+
+# Prior to running the associated playbook
+#  -ensure openssh-server is installed on linux host
+
+# Host joining domain
+hostname: linux2
+# Username on the host system
+user: user1
+# Domain the host is joining
+domain_to_join: busch.com
+# Domain user
+domain_user: Administrator
+# Domain password
+domain_password: examplepassword
+# IP of domain controller
+dns_ip: 192.168.1.11
+# Host su password
+ansible_become_password: examplepassword
+# Domain controller name **ensure this has the same name as in inventory.yml file
+domain_controller: addedwinserver
+# Container, Organizational Unit, Domain Controller
+path: CN=Users,DC=busch,DC=com
+# Active Directory User
+ad_username: user1
+# Active Directory Password
+ad_password: examplepassword

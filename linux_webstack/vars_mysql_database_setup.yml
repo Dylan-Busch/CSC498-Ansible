@@ -1,0 +1,10 @@
+# Variables for mysql_database_setup.yml
+
+# Hostname to set for the MY-SQL server
+new_hostname: linuxdataserver #ensure this matches the hostname in the inventory.yml file
+#IP of the linux server
+linux_serverip: 192.168.1.41
+# SU password
+ansible_become_password: examplepassword
+# mysql root password
+mysql_root_password: examplepassword

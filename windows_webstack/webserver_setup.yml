@@ -1,0 +1,46 @@
+# Playbook Information
+#  - This playbook creates a Internet Information Services (ISS) (Web Server) on a Windows Server that's ready for
+#    ASP or C# websites 
+
+- name: Setup Windows ISS
+  hosts: "{{ new_hostname  }}"
+  gather_facts: no
+  vars_files:
+    - vars_webserver_setup.yml
+    - ../secrets.yml
+
+  tasks:
+
+  - name: Change hostname
+    ansible.windows.win_hostname:
+      name: "{{ new_hostname }}"
+    register: res
+
+  - name: Reboot after hostname change
+    ansible.windows.win_reboot:
+      msg: "Rebooting after changing hostname"
+    when: res.reboot_required
+
+  - name: Install ISS web-server
+    ansible.windows.win_feature:
+      name:
+        - Web-Server
+        - Web-Asp-Net45
+        - Web-Net-Ext45
+      include_sub_features: true
+      include_management_tools: true
+    register: win_feature
+
+  - name: Reboot if installing web-server feature requires it
+    ansible.windows.win_reboot:
+    when: win_feature.reboot_required
+
+  - name: Install .Net hosting bundle
+    ansible.windows.win_package:
+      path: https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.0/dotnet-hosting-10.0.0-win.exe
+      arguments: /install /norestart /passive
+
+  - name: Remove default web site
+    microsoft.iis.website:
+      name: "Default Web Site"
+      state: absent

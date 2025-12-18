@@ -1,0 +1,43 @@
+# Playbook Information
+#  - This playbook adds a user to the FTP server 
+
+- name: Add FTP user to FTP server
+  hosts: "{{ linux_server }}"
+  gather_facts: false
+  become: true
+  vars_files:
+    - ../secrets.yml
+    - vars_add_ftp_user.yml
+
+  tasks:
+
+    - name: Create FTP user
+      user:
+        name: "{{ ftp_user }}"
+        password: "{{ ftp_password | password_hash('sha512') }}"
+        create_home: yes
+        shell: /usr/sbin/nologin
+        home: "/srv/ftp/{{ ftp_user }}"
+
+    - name: Create FTP user directory permissions
+      file:
+        path: "/srv/ftp/{{ ftp_user }}"
+        state: directory
+        owner: "{{ ftp_user }}"
+        group: "{{ ftp_user }}"
+        mode: '0755'
+
+    - name: Add new user to userlist
+      ansible.builtin.lineinfile:
+        path: /etc/vsftpd.userlist
+        line: "{{ ftp_user }}"
+        insertafter: EOF
+
+    - name: Restart vsftpd
+      service:
+        name: vsftpd
+        state: restarted
+
+    - name: Complete
+      ansible.builtin.debug:
+        msg: 'User created: Login with "{{ ftp_user }}" and "{{ ftp_password }}"'

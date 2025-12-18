@@ -1,0 +1,38 @@
+# Ping all hosts in inventory
+
+- name: Ping winservers
+  hosts: winservers
+  gather_facts: no
+  vars_files:
+    -  secrets.yml
+  tasks:
+  - name: Ping winservers
+    ansible.windows.win_ping:
+
+- name: Ping winhosts
+  hosts: winhosts
+  gather_facts: no
+  vars_files:
+    -  secrets.yml
+  tasks:
+  - name: Ping winhosts
+    ansible.windows.win_ping:
+
+- name: Ping linuxservers
+  hosts: linuxservers
+  gather_facts: no
+  vars_files:
+    -  secrets.yml
+  tasks:
+  - name: Ping linuxservers
+    ansible.builtin.ping:
+
+- name: Ping linuxhosts
+  hosts: linuxhosts
+  gather_facts: no
+  vars_files:
+    -  secrets.yml
+  tasks:
+  - name: Ping linuxhosts
+    ansible.builtin.ping:
+

@@ -1,0 +1,34 @@
+# Playbook Information
+#  - This playbook installs and starts MS-SQL on a Windows Server
+
+- name: Setup MS-SQL Server
+  hosts: "{{ new_hostname  }}"
+  gather_facts: no
+  vars_files:
+    - vars_mssql_database_setup.yml
+    - ../secrets.yml
+
+  tasks:
+
+  - name: Change hostname
+    ansible.windows.win_hostname:
+      name: "{{ new_hostname }}"
+    register: res
+
+  - name: Reboot after hostname change
+    ansible.windows.win_reboot:
+      msg: "Rebooting after changing hostname"
+    when: res.reboot_required
+
+  - name: Download SQL Express
+    ansible.windows.win_get_url:
+      url: https://go.microsoft.com/fwlink/p/?linkid=2216019&clcid=0x409&culture=en-us&country=us
+      dest: C:\\temp\\sqlexpress.exe
+
+  - name: Install SQL Express
+    ansible.windows.win_command: "C:\\temp\\sqlexpress.exe /Q /Action=Install /IAcceptSqlServerLicenseTerms"
+
+  - name: Download SQL Server Management Studio
+    ansible.windows.win_get_url:
+      path: https://aka.ms/ssms/22/release/vs_SSMS.exe
+      arguments: /install /passive /norestart

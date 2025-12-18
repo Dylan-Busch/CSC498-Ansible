@@ -1,0 +1,28 @@
+# Variables for wordpress.yml
+
+#Hostname of the webserver
+webserver_hostname: linuxwebserver #ensure this matches the hostname in the inventory.yml file
+#IP of the linux server
+webserver_ip: 192.168.1.21
+#SU password
+web_ansible_become_password: examplepassword
+
+#Hostname of the mysql server
+databaseserver_hostname: linuxdataserver #ensure this matches the hostname in the inventory.yml file
+#IP of the linux server
+databaseserver_ip: 192.168.1.41
+#SU password
+data_ansible_become_password: examplepassword
+#Password of root user within mysql 
+mysql_root_password: examplepassword
+#Password for new wordpress_admin mysql user
+wordpress_db_password: examplepassword
+
+#Wordpress website title
+wp_title: Site1
+#Wordpress admin username
+wp_user: admin
+#Wordpress admin password
+wp_password: examplepassword
+#Wordpress email
+wp_email: testwp@gmail.com

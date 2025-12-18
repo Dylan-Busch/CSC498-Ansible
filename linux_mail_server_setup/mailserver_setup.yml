@@ -1,0 +1,132 @@
+# Playbook Information
+#  - This playbook creates a mailserver on a Linux system
+# !!! - Run in combination with the add_mail_user.yml playbook, need to create an
+#       user on the mailserver for each user accessing the mailserver
+
+- name: add remote server SSH fingerprint to known host file
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars_mailserver_setup.yml
+
+  tasks:
+    - name: add remote host fingerprint to known hosts
+      ansible.builtin.known_hosts:
+        name: "{{ linux_serverip }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + linux_serverip) }}"
+
+- name: Create Mail Server
+  hosts: "{{ linux_server }}"
+  gather_facts: false
+  become: true
+  vars_files:
+    - ../secrets.yml
+    - vars_mailserver_setup.yml
+
+  tasks:
+
+  - name: rename host
+    ansible.builtin.hostname:
+      name: "{{ hostname }}"
+
+  - name: modify /etc/hosts
+    lineinfile:
+      path: /etc/hosts
+      regexp: '^127.0.1.1'
+      line: "127.0.1.1       {{ hostname }}"
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ linux_serverip }}       {{ mail_name }}"
+
+  - name: install mail server packages
+    ansible.builtin.package:
+      name:
+        - postfix
+        - dovecot-imapd
+        - dovecot-pop3d
+      state: present
+
+  - name: configure postfix
+    lineinfile:
+      path: /etc/postfix/main.cf
+      regexp: '^{{ item.key }}'
+      line: "{{ item.key }} = {{ item.value }}"
+    with_items:
+      - { key: "myhostname", value: "{{ mail_name }}" }
+      - { key: "mydomain", value: "{{ mail_name }}" }
+      - { key: "myorigin", value: "$mydomain" }
+      - { key: "mydestination", value: '$myhostname, {{ mail_name }}, localhost.localdomain, localhost' }
+      - { key: "mynetworks", value: "127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 192.168.1.0/24" }
+      - { key: "home_mailbox", value: "Maildir/" }
+
+  - name: restart postfix
+    ansible.builtin.service:
+      name: postfix
+      state: restarted
+
+  - name: configure dovecot
+    blockinfile:
+      path: /etc/dovecot/dovecot.conf
+      block: |
+        protocols = pop3 imap
+        mail_location = maildir:~/Maildir
+
+  - name: configure dovecot2
+    lineinfile:
+      path: /etc/dovecot/conf.d/10-auth.conf
+      regexp: '^{{ item.key }}'
+      line: "{{ item.key }} = {{ item.value }}"
+    with_items:
+      - { key: "auth_mechanisms", value: "plain login" }
+      - { key: "disable_plaintext_auth", value: "no" }
+
+  - name: restart dovecot
+    ansible.builtin.service:
+      name: dovecot
+      state: restarted
+
+#  - name: configure SMTP for outlook
+#    lineinfile:
+#      path: /etc/dovecot/conf.d/10-auth.conf
+#      line: "auth_mechanisms = plain login"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

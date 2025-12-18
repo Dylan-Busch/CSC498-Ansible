@@ -1,0 +1,11 @@
+# Variables file for the 'add_ftp_user.yml' playbook
+
+# Name of server creating the fileshare on (ensure this matches the name in the inventory.yml file)
+linux_server: ftpserver
+# SU password
+ansible_become_password: examplepassword
+# New FTP User
+ftp_user: user1
+# New FTP Password
+ftp_password: examplepassword
+
