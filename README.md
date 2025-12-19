@@ -51,8 +51,8 @@ inventory = /home/user1/ansible/inventory.yml
 ## Utilizing Playbooks
 Each folder has at least one playbook and its corresponding variables file
   - modify the variables file with the information specific to your environment
-  - ensure all hosts the playbook is managing has assigned IP addresses
-  - ensure all host information is inside inventory file
+  - ensure all hosts the playbook is managing have assigned IP addresses
+  - ensure all host information is within the inventory file
   - Run a playbook with the command:
 ```
 ansible-playbook playbookname.yml
