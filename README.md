@@ -46,7 +46,7 @@ Edit ansible.cfg to specify the inventory.yml file location on your system
 inventory = /home/user1/ansible/inventory.yml
 ```
 
-### Use the inventory.yml and Ssecrets.yml files to create the inventory for managed nodes in the environment. These currently contain sample data for an example layout in YAML format
+### Use the inventory.yml and secrets.yml files to create the inventory for managed nodes in the environment. These currently contain sample data for an example layout in YAML format
 
 ## Utilizing Playbooks
 Each folder has at least one playbook and its corresponding variables file
